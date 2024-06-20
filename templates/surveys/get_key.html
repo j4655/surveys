@@ -1,0 +1,8 @@
+<h1>{{ survey_name }}</h1>
+
+<form method="POST" action="/survey/{{ survey_id }}/respond/">
+{% csrf_token %}
+<label for="key">Please input your survey key</label>
+<input type="text" id="key" name="key" required>
+<button type="submit">Submit</button>
+</form>

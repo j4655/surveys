@@ -1,0 +1,7 @@
+<h1>Open Surveys</h1>
+
+{% for x in surveys %}
+<a href="/survey/{{ x.id }}/">
+  <button>{{ x.name }}</button>
+</a>
+{% endfor %}
