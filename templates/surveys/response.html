@@ -1,0 +1,23 @@
+
+<form method="POST" action="/survey/submit/">
+{% csrf_token %}
+<input type="hidden" name="survey" value="{{ survey }}">
+<input type="hidden" name="key" value="{{ key }}">
+{% for x in questions %}
+	<label for="q{{ x.question_id }}">{{ x.question_text }}</label>
+	
+	{% if x.response_type == 'Text' %}
+		<input type="text" id="q{{ x.question_id }}" name="{{ x.question_id }}" >
+	{% elif x.response_type == 'Likert' %}
+		<select id="q{{ x.question_id }}" name="{{ x.question_id }}" >
+			<option></option>
+			{% for ops in x.static_options %}
+				<option value="{{ ops }}">{{ ops }}</option>
+			{% endfor %}
+		</select>
+	{% else %}
+		<h1>Not a supported response type.</h1>
+	{% endif %}
+{% endfor %}
+<button type="submit">Submit</button>
+</form>

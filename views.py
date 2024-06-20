@@ -35,14 +35,15 @@ def surveyResponse(request, id):
     except Survey_key.DoesNotExist:
       return HttpResponse('None was returned')
     
-    response = {'survey_key': id, 'key': key, 'questions': {'question_id': [], 'question_text': [],  'options': [], 'response_type': [], 'static_options': []}}
+    response = {'survey': id, 'key': key, 'questions': []}
     qs_questions = Question.objects.filter(survey_id=id)
     for row in qs_questions:
-      response['questions']['question_id'].append(row.id)
-      response['questions']['question_text'].append(row.text)
-      response['questions']['options'].append(row.options)
-      response['questions']['response_type'].append(row.response_type.name)
-      response['questions']['static_options'].append(row.response_type.static_options)
-    return JsonResponse(response)
+      q = {'question_id': row.id, 'question_text': row.text, 'options': row.options, 'response_type': row.response_type.name, 'static_options': row.response_type.static_options.split(',')}
+      response['questions'].append(q)
+    #return JsonResponse(response)
+    return render(request, 'surveys/response.html', context=response)
   else:
     return HttpResponse('Key was not given')
+
+def submitResponse(request):
+  return JsonResponse(request.POST)

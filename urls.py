@@ -22,4 +22,5 @@ urlpatterns = [
     path('', views.selectSurvey),
     path('<int:id>/', views.getKey),
     path('<int:id>/respond/', views.surveyResponse),
+    path('submit/', views.submitResponse),
 ]
