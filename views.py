@@ -72,5 +72,5 @@ def submitResponse(request):
       return HttpResponse('None was returned')
     response = Response(question=question, submission=submission, response=(data['value'][i]) )
     response.save()
-  return HttpResponse('Your survey response was successfully submitted.')
+  return render(request, 'surveys/success.html')
     
