@@ -53,7 +53,7 @@ def surveyResponse(request, id):
 
 def submitResponse(request):
   survey = request.POST['survey']
-  survey_key = Survey_key.objects.get(pk=request.POST['key'])
+  survey_key = Survey_key.objects.get(survey=Survey.objects.get(pk=survey), key=request.POST['key'])
   data = {'key': [], 'question-number': [], 'value': []}
   for key, value in request.POST.items():
     if key[:9] == 'question-':
