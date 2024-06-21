@@ -37,11 +37,11 @@ def surveyResponse(request, id):
   key = request.POST.get('key')
   if (key is not None and key != '' ):
     try:
-      survey_key = Survey_key.objects.filter(survey_id=id, key=key)
+      survey_key = Survey_key.objects.get(survey_id=id, key=key)
     except Survey_key.DoesNotExist:
       return HttpResponse('None was returned')
     
-    response = {'survey': id, 'key': key, 'questions': []}
+    response = {'survey_name': survey_key.survey.name,'survey': id, 'key': key, 'questions': []}
     qs_questions = Question.objects.filter(survey_id=id).order_by('id')
     for row in qs_questions:
       q = {'question_id': row.id, 'question_text': row.text, 'options': row.options, 'response_type': row.response_type.name, 'static_options': row.response_type.static_options.split(',')}

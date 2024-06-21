@@ -1,8 +1,17 @@
-<h1>Open Surveys</h1>
+{% include 'surveys/header.html' %}
 
-{% for x in surveys %}
-{# <a href="/survey/{{ x.id }}/"> #}
-<a href="{% url 'get_key' x.id %}">
-  <button>{{ x.name }}</button>
-</a>
+
+<div class="container">
+  <h1 class="mb-3">Open Surveys</h1>
+
+  {% for x in surveys %}
+    <a class="d-block mb-3" href="{% url 'get_key' x.id %}">
+      <div class="d-grid">
+        <button class="btn btn-primary"> 
+          {{ x.name }}
+        </button>
+      </div>
+    </a>
 {% endfor %}
+</div>
+{% include 'surveys/footer.html' %}

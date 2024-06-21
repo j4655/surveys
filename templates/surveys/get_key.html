@@ -1,9 +1,18 @@
-<h1>{{ survey_name }}</h1>
+{% include 'surveys/header.html' %}
 
-{# <form method="POST" action="/survey/{{ survey_id }}/respond/"> #}
-<form method="POST" action="{% url 'respond' survey_id %}">
-{% csrf_token %}
-<label for="key">Please input your survey key</label>
-<input type="text" id="key" name="key" required>
-<button type="submit">Submit</button>
-</form>
+<div class="container">
+
+    <h1 class="mb-3">{{ survey_name }}</h1>
+
+    <form method="POST" action="{% url 'respond' survey_id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label" for="key">Please input your survey key</label>
+            <input class="form-control" type="text" id="key" name="key" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
+
+</div>
+
+{% include 'surveys/footer.html' %}
