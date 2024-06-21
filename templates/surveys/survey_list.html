@@ -1,7 +1,8 @@
 <h1>Open Surveys</h1>
 
 {% for x in surveys %}
-<a href="/survey/{{ x.id }}/">
+{# <a href="/survey/{{ x.id }}/"> #}
+<a href="{% url 'get_key' x.id %}">
   <button>{{ x.name }}</button>
 </a>
 {% endfor %}

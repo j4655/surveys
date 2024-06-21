@@ -4,8 +4,14 @@ from django.http import JsonResponse
 
 from .models import Survey
 from .models import Survey_key
-from .models import Response_type
+# from .models import Response_type
 from .models import Question
+from .models import Submission
+from .models import Survey_key
+from .models import Response
+# import pandas as pd
+from datetime import datetime
+
 # Create your views here.
 
 def selectSurvey(request):
@@ -36,7 +42,7 @@ def surveyResponse(request, id):
       return HttpResponse('None was returned')
     
     response = {'survey': id, 'key': key, 'questions': []}
-    qs_questions = Question.objects.filter(survey_id=id)
+    qs_questions = Question.objects.filter(survey_id=id).order_by('id')
     for row in qs_questions:
       q = {'question_id': row.id, 'question_text': row.text, 'options': row.options, 'response_type': row.response_type.name, 'static_options': row.response_type.static_options.split(',')}
       response['questions'].append(q)
@@ -46,4 +52,25 @@ def surveyResponse(request, id):
     return HttpResponse('Key was not given')
 
 def submitResponse(request):
-  return JsonResponse(request.POST)
+  survey = request.POST['survey']
+  survey_key = Survey_key.objects.get(pk=request.POST['key'])
+  data = {'key': [], 'question-number': [], 'value': []}
+  for key, value in request.POST.items():
+    if key[:9] == 'question-':
+      data['key'].append(key)
+      data['question-number'].append(int(key[9::]))
+      data['value'].append(value)
+  
+  submission = Submission(language='English', ts=datetime.now(), survey_key=survey_key)
+  submission.save()
+  # return HttpResponse(submission.id)
+
+  for i in range(len(data['question-number'])):
+    try:
+      question = Question.objects.filter(survey=survey).get(pk=data['question-number'][i])
+    except question.DoesNotExist:
+      return HttpResponse('None was returned')
+    response = Response(question=question, submission=submission, response=(data['value'][i]) )
+    response.save()
+  return HttpResponse('Your survey response was successfully submitted.')
+    

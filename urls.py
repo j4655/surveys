@@ -19,8 +19,8 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('', views.selectSurvey),
-    path('<int:id>/', views.getKey),
-    path('<int:id>/respond/', views.surveyResponse),
-    path('submit/', views.submitResponse),
+    path('', views.selectSurvey, name="select"),
+    path('<int:id>/', views.getKey, name="get_key"),
+    path('<int:id>/respond/', views.surveyResponse, name="respond"),
+    path('submit/', views.submitResponse, name="submit"),
 ]
