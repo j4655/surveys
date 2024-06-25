@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.db.models import Q
 
 from .models import Survey
 from .models import Survey_key
@@ -13,8 +14,38 @@ from .models import Response
 from datetime import datetime
 from urllib.parse import quote, unquote
 
-# Create your views here.
+### The term object used in the comments can refer to a dictionary. It is basicly JSON. ###
 
+def getOpenSurveys():
+  now = datetime.now()
+  surveys = Survey.objects.filter(
+    Q(is_open=True) & (
+      (
+        Q(start__lte=now) & Q(end__gt=now)
+      )
+      |
+      (
+        Q(start__isnull=True) & Q(end__isnull=True)
+      )
+    )
+  )
+  return(surveys)
+
+def isSurveyOpen(id):
+  try:
+    survey = getOpenSurveys().get(pk=id)
+    return True
+  except Survey.DoesNotExist:
+    return False
+
+
+'''
+This view runs when the user enters the main page of the application (home page / index).
+It only collects survey records that are marked as open.
+It creates a context object that contains an array of surveys,
+with each element in that array being a survey object containing a name and id.
+The context is passed to the survey_list template for rendering.
+'''
 def selectSurvey(request):
   response = {'surveys': []}
   survey_q = Survey.objects.filter(is_open=True).order_by('name')
@@ -24,6 +55,10 @@ def selectSurvey(request):
   return render(request, 'surveys/survey_list.html', context=response)
   #return JsonResponse(response)
 
+
+'''
+
+'''
 def getKey(request, id):
   response = {'survey_name': '', 'survey_id': id}
   try:

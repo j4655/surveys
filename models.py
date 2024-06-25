@@ -23,6 +23,7 @@ class Question(models.Model):
   response_type = models.ForeignKey(Response_type, on_delete=models.PROTECT)
   text = models.TextField()
   options = models.TextField(blank=True, null=True)
+  required = models.BooleanField()
   def __str__(self):
     return self.survey.name + ' > ' + self.response_type.name + ' > ' + self.text
 
