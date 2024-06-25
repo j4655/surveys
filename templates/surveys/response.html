@@ -9,17 +9,36 @@
 		<input type="hidden" name="key" value="{{ key }}">
 		{% for x in questions %}
 			<div class="mb-3">
-				<label class="form-label" for="question-{{ x.question_id }}">{{ x.question_text }}</label>
-				
+				{% if x.response_type != 'Options-Single' and x.response_type != 'Options-Multi' %}
+					<label class="form-label" for="question-{{ x.question_id }}">{{ x.question_text }}</label>
+				{% else %}
+					<div class="form-label">{{ x.question_text }}</div>
+				{% endif %}
 				{% if x.response_type == 'Text' %}
 					<input class="form-control" type="text" id="question-{{ x.question_id }}" name="question-{{ x.question_id }}" >
 				{% elif x.response_type == 'Likert' %}
-					<select class="form-control" id="question-{{ x.question_id }}" name="question-{{ x.question_id }}" >
+					<select class="form-select" id="question-{{ x.question_id }}" name="question-{{ x.question_id }}" >
 						<option></option>
 						{% for ops in x.static_options %}
 							<option value="{{ ops }}">{{ ops }}</option>
 						{% endfor %}
 					</select>
+				{% elif x.response_type == 'Text-Long' %}
+					<textarea class='form-control' id="question-{{ x.question_id }}" name="question-{{ x.question_id }}" rows="3"></textarea>
+				{% elif x.response_type == 'Options-Single' %}
+					{% for y in x.options %}
+						<div class="form-check">
+							<input type="radio" class="form-check-input" id="question-{{ x.question_id }}-{{ y.option_number }}" name="question-{{ x.question_id }}" value="{{ y.option_text }}">
+							<label class="form-check-label" for="question-{{ x.question_id }}-{{ y.option_number }}">{{ y.option_text }}</label>
+						</div>
+					{% endfor %}
+					{% elif x.response_type == 'Options-Multi' %}
+					{% for y in x.options %}
+						<div class="form-check">
+							<input type="checkbox" class="form-check-input" id="question-{{ x.question_id }}-{{ y.option_number }}" name="question-{{ x.question_id }}-{{ y.option_number }}" value="{{ y.option_text }}">
+							<label class="form-check-label" for="question-{{ x.question_id }}-{{ y.option_number }}">{{ y.option_text }}</label>
+						</div>
+					{% endfor %}
 				{% else %}
 					<h1>Not a supported response type.</h1>
 				{% endif %}
