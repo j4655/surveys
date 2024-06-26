@@ -131,6 +131,7 @@ def surveyResponse(request, id):
       'question_id': row.id, 
       'question_text': row.text, 
       'options': option_objects, 
+      'required': row.required,
       'response_type': row.response_type.name, 
       'static_options': row.response_type.static_options.split(',')}
     response['questions'].append(q)
