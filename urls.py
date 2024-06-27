@@ -23,4 +23,6 @@ urlpatterns = [
     path('<int:id>/', views.getKey, name="get_key"),
     path('<int:id>/respond/', views.surveyResponse, name="respond"),
     path('submit/', views.submitResponse, name="submit"),
+    path('create/', views.createSurvey, name="create"),
+    path('login/', views.survey_login, name='survey_login'),
 ]

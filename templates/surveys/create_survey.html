@@ -1,0 +1,42 @@
+{% if user.is_authenticated %}
+{% include 'surveys/header.html' %}
+
+<form method="POST" action="" >
+	{% csrf_token %}
+	<div class="container border" style="min-height:100%">
+		<div class="row mt-3 me-1">
+			<h1 class="col-2">Survey</h1>
+			<div class="col-8"></div>
+			<button type="submit" id="save" class="col-2 btn btn-primary">Save</button>
+		</div>
+		<hr>
+		<div class="mb-3">
+			<label for="survey-name" class="form-label">Survey name</label>
+			<input type="text" id="survey-name" name="survey-name" class="form-control" required>
+		</div>
+		<div class="form-check mb-3">
+			<label for="survey-is-open" class="form-label">Survey is open</label>
+			<input type="checkbox" id="survey-is-open" name="survey-is-open" class="form-check-input">
+		</div>
+		<div class="mb-3">
+			<label for="survey-start" class="form-label">Survey start</label>
+			<input type="date" id="survey-start" name="survey-start" class="form-control">
+		</div>
+		<div class="mb-3">
+			<label for="survey-end" class="form-label">Survey end</label>
+			<input type="date" id="survey-end" name="survey-end" class="form-control">
+		</div>
+		<br>
+		<h2>Questions</h2>
+		<hr>
+		<div id="questions-container"></div>
+		<button type="button" id="add-question" class="btn btn-secondary mb-3">Add Question</button>
+	</div>
+</form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="/static/surveys/create_survey.js"></script>
+
+{% include 'surveys/footer.html' %}
+{% endif %}
+

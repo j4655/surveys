@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, Http404
 from django.core.exceptions import PermissionDenied
-# from django.http import JsonResponse
+from django.http import JsonResponse
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
 
 from .models import Survey
 from .models import Survey_key
@@ -19,6 +21,34 @@ from urllib.parse import quote, unquote
 
 
 ### The term object used in the comments can refer to a dictionary. It is basicly JSON. ###
+
+def survey_login(request):
+  if(request.user.is_authenticated == False):
+    if(request.method == 'POST'):
+      username = request.POST["username"]
+      password = request.POST["password"]
+      user = authenticate(request, username=username, password=password)
+      if(user is not None):
+        login(request, user)
+        return redirect('select')
+      else:
+        return render(request, 'surveys/login.html')
+    else:
+      return render(request, 'surveys/login.html')
+  else:
+    return redirect('select')
+
+def createSurvey(request):
+  if(request.user.is_authenticated == False):
+    raise PermissionDenied
+  if(request.method == 'POST'):
+    response = {}
+    for key, value in request.POST.items():
+      response[key] = value
+    return JsonResponse(response)
+  else:
+    return render(request, 'surveys/create_survey.html')
+
 
 '''
 Returns a queryset containing all surveys that are open and active.
