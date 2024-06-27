@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 
 from .models import Question, Submission, Survey, Survey_key, Response, Response_type
 
-# import pandas as pd
+import pandas as pd
 from datetime import datetime
 from urllib.parse import quote, unquote
 
@@ -35,14 +35,68 @@ def survey_login(request):
   else:
     return redirect('select')
 
+'''
+Deny access if user is not authenticated.
+Render the survey creation form if the request method IS NOT POST.
+Create a new survey and questions in the request method IS POST.
+'''
 def createSurvey(request):
   if(request.user.is_authenticated == False):
     raise PermissionDenied
   if(request.method == 'POST'):
-    response = {}
+    # Reformat the POST data into JSON
+    uinput = {}
     for key, value in request.POST.items():
-      response[key] = value
-    return JsonResponse(response)
+      uinput[key] = value
+
+    # Create the survey record
+    new_survey = Survey()
+    new_survey.name = uinput['survey-name']
+    if(uinput['survey-start'] != "" and uinput['survey-end'] != ""):
+      new_survey.start = uinput['survey-start']
+      new_survey.end = uinput['survey-end']
+    if ('survey-is-open' in uinput ):
+      new_survey.is_open = True
+    else:
+      new_survey.is_open = False
+
+    # Clean and save survey record
+    new_survey.clean()
+    new_survey.save()
+
+    # Parse the input and format question data
+    new_questions = {'q_id': [], 'field': [], 'number': [], 'value': []}
+    for key, value in uinput.items():
+      if len(key.split('question-')) > 1:
+        q_data = key.split('-')
+        new_questions['q_id'].append(int(q_data[1]))
+        new_questions['field'].append(q_data[2])
+        if len(q_data) >= 4:
+          new_questions['number'].append(int(q_data[3]))
+        else:
+          new_questions['number'].append(0)
+        new_questions['value'].append(value)
+    q = pd.DataFrame(new_questions)
+
+    # Create the question records
+    for i in q['q_id'].unique():
+      new_question = Question()
+      new_question.survey = new_survey
+      new_question.text = q[(q['q_id'] == i) & (q['field'] == 'text')].iat[0,3]
+      new_question.response_type = Response_type.objects.get(pk=q[ (q['q_id'] == i) & (q['field'] == 'response_type')].iat[0,3])
+      if(len(q[ (q['q_id'] == i) & (q['field'] == 'required') ]['value']) == 0):
+        new_question.required = False
+      else:
+        new_question.required = True
+      new_question.clean()
+      new_question.save()
+
+    return JsonResponse(new_questions)
+
+
+    
+
+    return JsonResponse(uinput)
   else:
     context = {'response_types': []}
     for x in Response_type.objects.all():
