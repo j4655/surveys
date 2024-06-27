@@ -1,5 +1,14 @@
 var num_questions = 0;
-let response_types = ['Text', 'Text-Long', 'Likert', 'Options-Single', 'Options-Multi'];
+//let response_types = ['Text', 'Text-Long', 'Likert', 'Options-Single', 'Options-Multi'];
+let response_types = [];
+$('#response_types > div.rt').each(function(index) {
+    let r = {};
+    r['id'] = $(this).find('div.rt_id').text();
+    r['name'] = $(this).find('div.rt_name').text();
+    response_types.push(r);
+});
+console.log(response_types);
+
 $('#add-question').click(function() { 
     num_questions++;
     let id_prefix = "question-" + num_questions + "-";
@@ -24,7 +33,7 @@ $('#add-question').click(function() {
     var typ_label = $('<label></label>').addClass('form-label').text('Response type').attr("for", id_prefix + "response_type");
     var typ_input = $('<select></select>').addClass('form-select').attr("name", id_prefix + "response_type").attr("id", id_prefix + "response_type");
     response_types.forEach(function(x) {
-        option = $('<option></option>').attr('value', x).text(x);
+        option = $('<option></option>').attr('value', x['id']).text(x['name']);
         typ_input.append(option);
     });
     var typ_div = $('<div></div>').addClass('mb-3');
@@ -65,7 +74,7 @@ $('#add-question').click(function() {
     // Add On Change event to response type, which will show the options section if the response type needs options to be defined.
     // The options section will be hidden if the response type does not use user-defined options.
     $("#" + id_prefix + "response_type").change(function() {
-        if( $(this).val() == "Options-Single" || $(this).val() == "Options-Multi") {
+        if( $(this).val() == "4" || $(this).val() == "5") {
             $("#" + id_prefix + "options-container").removeClass('d-none');
             $("#" + id_prefix + "options-container input").each(function(index) {
                 $(this).removeAttr("disabled");

@@ -3,16 +3,11 @@ from django.http import HttpResponse, Http404
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
+# from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 
-from .models import Survey
-from .models import Survey_key
-# from .models import Response_type
-from .models import Question
-from .models import Submission
-from .models import Survey_key
-from .models import Response
+from .models import Question, Submission, Survey, Survey_key, Response, Response_type
+
 # import pandas as pd
 from datetime import datetime
 from urllib.parse import quote, unquote
@@ -32,6 +27,8 @@ def survey_login(request):
         login(request, user)
         return redirect('select')
       else:
+        # possibly add context object for indicating the login failure to user when template renders
+        # possibly add additional functionality where user accounts get locked after multiple login failures
         return render(request, 'surveys/login.html')
     else:
       return render(request, 'surveys/login.html')
@@ -47,7 +44,10 @@ def createSurvey(request):
       response[key] = value
     return JsonResponse(response)
   else:
-    return render(request, 'surveys/create_survey.html')
+    context = {'response_types': []}
+    for x in Response_type.objects.all():
+      context['response_types'].append({'id': x.id, 'name': x.name})
+    return render(request, 'surveys/create_survey.html', context=context)
 
 
 '''

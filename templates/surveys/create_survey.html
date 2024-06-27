@@ -1,6 +1,15 @@
 {% if user.is_authenticated %}
 {% include 'surveys/header.html' %}
 
+<div id="response_types" class="d-none">
+	{% for x in response_types %}
+	<div class="rt">
+		<div class="rt_id">{{ x.id }}</div>
+		<div class="rt_name">{{ x.name }}</div>
+	</div>
+	{% endfor %}
+</div>
+
 <form method="POST" action="" >
 	{% csrf_token %}
 	<div class="container border" style="min-height:100%">
