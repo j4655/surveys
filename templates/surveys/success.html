@@ -1,7 +1,7 @@
 {% include 'surveys/header.html' %}
 <div class="container">
     <h1 class="mb-3">Success!</h1>
-    <div class="mb-3">Your survey response was successfully submitted.</div>
+    <div class="mb-3">{{ success_msg }}</div>
     <a href="{% url 'select' %}"><button class="btn btn-success">Back</button></a>
 </div>
 {% include 'surveys/footer.html' %}

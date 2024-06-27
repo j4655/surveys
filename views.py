@@ -81,22 +81,34 @@ def createSurvey(request):
     # Create the question records
     for i in q['q_id'].unique():
       new_question = Question()
+      # set Survey FK
       new_question.survey = new_survey
+      # set question text
       new_question.text = q[(q['q_id'] == i) & (q['field'] == 'text')].iat[0,3]
+      # set question Response Type FK
       new_question.response_type = Response_type.objects.get(pk=q[ (q['q_id'] == i) & (q['field'] == 'response_type')].iat[0,3])
+      # set question Required to True or False depending on if the required checkbox was checked
       if(len(q[ (q['q_id'] == i) & (q['field'] == 'required') ]['value']) == 0):
         new_question.required = False
       else:
         new_question.required = True
+      # set question options
+      options_df = q[ (q['q_id'] == i) & (q['field'] == 'option') ].sort_values(by='number')
+      options = ''
+      for option in options_df['value']:
+        options = options + quote(str(option)) + ','
+      if len(options) > 0:
+        options = options[0:-1]
+        new_question.options = options
+
+      # clean and save each question
       new_question.clean()
       new_question.save()
 
-    return JsonResponse(new_questions)
-
-
-    
-
-    return JsonResponse(uinput)
+    # Redirect to the success page
+    return render(request, 'surveys/success.html', context={'success_msg': 'Your survey was successfully created.'})
+    # return JsonResponse(new_questions)
+    # return JsonResponse(uinput)
   else:
     context = {'response_types': []}
     for x in Response_type.objects.all():
@@ -209,7 +221,7 @@ def surveyResponse(request, id):
     if (row.response_type.name == "Options-Single" or row.response_type.name == "Options-Multi"):
       options_list = row.options.split(',')
       for i in range(len(options_list)):
-        option_obj = {'option_number': i+1, 'option_text': options_list[i]}
+        option_obj = {'option_number': i+1, 'option_text': unquote(options_list[i])}
         option_objects.append(option_obj)
     q = {
       'question_id': row.id, 
@@ -271,5 +283,5 @@ def submitResponse(request):
       return HttpResponse('None was returned')
     response = Response(question=question, submission=submission, response=(data['value'][i]) )
     response.save()
-  return render(request, 'surveys/success.html')
+  return render(request, 'surveys/success.html', context={'success_msg': 'Your survey response was successfully submitted.'})
     
