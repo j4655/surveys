@@ -222,7 +222,10 @@ def surveyResponse(request, id):
   
   for row in qs_questions:
     option_objects = []
-    if (row.response_type.name == "Options-Single" or row.response_type.name == "Options-Multi"):
+    if (
+        (row.response_type.name == "Options-Single" or row.response_type.name == "Options-Multi")
+        and row.options is not None
+        ):
       options_list = row.options.split(',')
       for i in range(len(options_list)):
         option_obj = {'option_number': i+1, 'option_text': unquote(options_list[i])}
