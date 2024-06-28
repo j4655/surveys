@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.db.models import Q
 # from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 from .models import Question, Submission, Survey, Survey_key, Response, Response_type
 
@@ -16,6 +16,10 @@ from urllib.parse import quote, unquote
 
 
 ### The term object used in the comments can refer to a dictionary. It is basicly JSON. ###
+
+def survey_logout(request):
+  logout(request)
+  return redirect('select')
 
 def survey_login(request):
   if(request.user.is_authenticated == False):
@@ -42,7 +46,7 @@ Create a new survey and questions in the request method IS POST.
 '''
 def createSurvey(request):
   if(request.user.is_authenticated == False):
-    raise PermissionDenied
+    return redirect('survey_login')
   if(request.method == 'POST'):
     # Reformat the POST data into JSON
     uinput = {}
