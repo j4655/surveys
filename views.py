@@ -6,14 +6,24 @@ from django.db.models import Q
 # from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 
-from .models import Question, Submission, Survey, Survey_key, Response, Response_type, Language
+from . import config
+from .models import Question
+from .models import Submission
+from .models import Survey
+from .models import Survey_key
+from .models import Response
+from .models import Response_type
+from .models import Language
 
 import pandas as pd
 from datetime import datetime
 from urllib.parse import quote, unquote
 import os
-# Will need to make this an optional dependency at some point
-from google.cloud import translate_v2 as translate
+
+if config.USE_GOOGLE_TRANSLATE == True:
+  # Will need to make this an optional dependency at some point
+  from google.cloud import translate_v2 as translate
+  from .models import Question_translation
 
 
 
@@ -248,6 +258,9 @@ def surveyResponse(request, id):
   except Language.DoesNotExist:
     raise Http404
 
+  response = {'survey_name': survey_key.survey.name,'survey': id, 'key': key, 'questions': []}
+  qs_questions = Question.objects.filter(survey_id=id).order_by('id')
+
    # If the language is not English, we will check if all questions
    # translations stored for the given language.
    # If there are any translations missing, Google API will be used
@@ -256,41 +269,81 @@ def surveyResponse(request, id):
    # missing translations will be rendered
    # with the default question text (English). 
    # We will display whatever we can in the selected language.
-  if lang.name == 'English':
+  if lang.name == 'English' or config.USE_GOOGLE_TRANSLATE == False:
     needs_translation = False
+    for row in qs_questions:
+      option_objects = []
+      if (
+          (row.response_type.name == "Options-Single" or row.response_type.name == "Options-Multi")
+          and row.options is not None
+          ):
+        options_list = row.options.split(',')
+        for i in range(len(options_list)):
+          option_obj = {'option_number': i+1, 'option_text': unquote(options_list[i])}
+          option_objects.append(option_obj)
+      q = {
+        'question_id': row.id, 
+        'question_text': row.text, 
+        'options': option_objects, 
+        'required': row.required,
+        'response_type': row.response_type.name, 
+        'static_options': row.response_type.static_options.split(',')}
+      response['questions'].append(q)
   else:
     needs_translation = True
-
-
-  # return JsonResponse(request.POST)
-  # return JsonResponse(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'), safe=False)
-  
-  # Will need to make this part optional by checking some sort of option later
-  t_client = translate.Client()
-  return JsonResponse(t_client.get_languages(), safe=False)
-
-  response = {'survey_name': survey_key.survey.name,'survey': id, 'key': key, 'questions': []}
-  qs_questions = Question.objects.filter(survey_id=id).order_by('id')
-  
-  for row in qs_questions:
-    option_objects = []
-    if (
-        (row.response_type.name == "Options-Single" or row.response_type.name == "Options-Multi")
-        and row.options is not None
-        ):
-      options_list = row.options.split(',')
-      for i in range(len(options_list)):
-        option_obj = {'option_number': i+1, 'option_text': unquote(options_list[i])}
-        option_objects.append(option_obj)
-    q = {
-      'question_id': row.id, 
-      'question_text': row.text, 
-      'options': option_objects, 
-      'required': row.required,
-      'response_type': row.response_type.name, 
-      'static_options': row.response_type.static_options.split(',')}
-    response['questions'].append(q)
-
+    t_client = translate.Client()
+    translations = []
+    for row in qs_questions:
+      try:
+        qs_trans = Question_translation.objects.get(language=lang, question=row)
+        translations.append(qs_trans)
+      except Question_translation.DoesNotExist:
+        # Has to get translation vie API
+        translation = t_client.translate(row.text, source_language=config.TRANSLATE_SOURCE, target_language=lang.code)
+        if(len(translation['translatedText']) > 0):
+          qs_trans = Question_translation()
+          qs_trans.question = row
+          qs_trans.language = lang
+          qs_trans.text = translation['translatedText']
+          if row.options is not None:
+            trans_options = ''
+            for option in row.options.split(','):
+              option_text = unquote(option)
+              option_trans = t_client.translate(option_text, source_language=config.TRANSLATE_SOURCE, target_language=lang.code)
+              if(len(option_trans['translatedText']) > 0):
+                #continue
+                trans_options += quote(option_trans['translatedText']) + ','
+              else:
+                # ERROR
+                return HttpResponse('There was an issue translating one of the question options')
+            qs_trans.options = trans_options[0:-1]
+          qs_trans.clean()
+          qs_trans.save()
+          translations.append(qs_trans)
+        else:
+          # ERROR
+          return HttpResponse('There was an issue with translating the question text')
+      
+    # Process the questions for rendering now
+    for row in translations:
+      option_objects = []
+      if (
+          (row.question.response_type.name == "Options-Single" or row.question.response_type.name == "Options-Multi")
+          and row.options is not None
+          ):
+        options_list = row.options.split(',')
+        for i in range(len(options_list)):
+          option_obj = {'option_number': i+1, 'option_text': unquote(options_list[i])}
+          option_objects.append(option_obj)
+      q = {
+        'question_id': row.question.id, 
+        'question_text': row.text, 
+        'options': option_objects, 
+        'required': row.question.required,
+        'response_type': row.question.response_type.name, 
+        'static_options': row.question.response_type.static_options.split(',')}
+      response['questions'].append(q)
+  # return JsonResponse(response)
   return render(request, 'surveys/response.html', context=response)
 
 
