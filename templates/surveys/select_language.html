@@ -1,0 +1,25 @@
+{% include 'surveys/header.html' %}
+
+<div class="container">
+    <form method="POST" action="{% url 'respond' survey_id %}">
+        {% csrf_token %}
+        <input type="hidden" name="key" value="{{ key }}">
+        <div class="mb-3">
+            <select id="language_select" name="language_select" class="form-select" required>
+                <option value="" class="text-center" disabled>----Please select a language----</option>
+                {% for lang in default_languages %}
+                    <option value="{{ lang.id }}">{{ lang.display }}</option>
+                {% endfor %}
+                <option value="" disabled></option>
+                <option value="" disabled>----Other Languages----</option>
+                {% for lang in other_languages %}
+                    <option value="{{ lang.id }}">{{ lang.display }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+</div>
+
+{% include 'surveys/footer.html' %}

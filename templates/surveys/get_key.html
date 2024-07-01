@@ -4,7 +4,7 @@
 
     <h1 class="mb-3">{{ survey_name }}</h1>
 
-    <form method="POST" action="{% url 'respond' survey_id %}">
+    <form method="POST" action="{% url 'get_lang' survey_id %}">
         {% csrf_token %}
         <div class="mb-3">
             <label class="form-label" for="key">Please input your survey key</label>

@@ -27,9 +27,17 @@ class Question(models.Model):
   def __str__(self):
     return self.survey.name + ' > ' + self.response_type.name + ' > ' + self.text
 
+class Language(models.Model):
+  code = models.CharField()
+  name = models.CharField()
+  translated_name = models.CharField()
+  is_default = models.BooleanField()
+  def __str__(self):
+    return self.name + ":  " + self.translated_name
+
 class Question_translation(models.Model):
   question = models.ForeignKey(Question, on_delete=models.CASCADE)
-  language = models.CharField()
+  language = models.ForeignKey(Language, on_delete=models.PROTECT)
   text = models.TextField()
   options = models.TextField(blank=True, null=True)
   def __str__(self):
@@ -45,7 +53,7 @@ class Survey_key(models.Model):
 
 class Submission(models.Model):
   survey_key = models.ForeignKey(Survey_key, on_delete=models.CASCADE)
-  language = models.CharField()
+  language = models.ForeignKey(Language, on_delete=models.PROTECT)
   ts = models.DateTimeField()
   def __str__(self):
     return self.survey_key.survey.name + ' > Key:' + self.survey_key.key + ' > ID:' + str(self.id)
@@ -56,3 +64,4 @@ class Response(models.Model):
   response = models.TextField()
   def __str__(self):
     return self.question.survey.name + ' > Response:' + str(self.id)
+

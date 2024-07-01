@@ -6,11 +6,14 @@ from django.db.models import Q
 # from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 
-from .models import Question, Submission, Survey, Survey_key, Response, Response_type
+from .models import Question, Submission, Survey, Survey_key, Response, Response_type, Language
 
 import pandas as pd
 from datetime import datetime
 from urllib.parse import quote, unquote
+import os
+# Will need to make this an optional dependency at some point
+from google.cloud import translate_v2 as translate
 
 
 
@@ -186,6 +189,29 @@ def selectSurvey(request):
 
 
 '''
+
+'''
+def getLang(request, id):
+  key = request.POST.get('key')
+
+  if(isKeyValid(key, id) == False):
+    raise Http404
+  # else:
+  #   survey_key = Survey_key.objects.get(survey_id=id, key=key)
+  
+  context = {'survey_id': id, 'key': key, 'default_languages': [], 'other_languages': []}
+  default_languages = Language.objects.filter(is_default=True)
+  other_languages = Language.objects.filter(is_default=False)
+  for x in default_languages:
+    lang = {'id': x.id, 'display': str(x)}
+    context['default_languages'].append(lang)
+  for x in other_languages:
+    lang = {'id': x.id, 'display': str(x)}
+    context['other_languages'].append(lang)
+  return render(request, 'surveys/select_language.html', context=context)
+
+
+'''
 This view runs when the user selects a survey from the list on the home page
 or when they visit the root of the application with '/[survey_id]' at the end of the URL.
 It checks if the survey is open and active, and if it is not it will raise a 404 error.
@@ -211,12 +237,38 @@ context object and passed to the response template to be rendered.
 '''
 def surveyResponse(request, id):
   key = request.POST.get('key')
-
+  lang_id = request.POST.get('language_select')
+  
   if(isKeyValid(key, id) == False):
     raise Http404
   else:
     survey_key = Survey_key.objects.get(survey_id=id, key=key)
-    
+  try:
+    lang = Language.objects.get(pk=lang_id)
+  except Language.DoesNotExist:
+    raise Http404
+
+   # If the language is not English, we will check if all questions
+   # translations stored for the given language.
+   # If there are any translations missing, Google API will be used
+   # to attempt translation of the missing questions.
+   # If there are still any missing translations, questions with
+   # missing translations will be rendered
+   # with the default question text (English). 
+   # We will display whatever we can in the selected language.
+  if lang.name == 'English':
+    needs_translation = False
+  else:
+    needs_translation = True
+
+
+  # return JsonResponse(request.POST)
+  # return JsonResponse(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'), safe=False)
+  
+  # Will need to make this part optional by checking some sort of option later
+  t_client = translate.Client()
+  return JsonResponse(t_client.get_languages(), safe=False)
+
   response = {'survey_name': survey_key.survey.name,'survey': id, 'key': key, 'questions': []}
   qs_questions = Question.objects.filter(survey_id=id).order_by('id')
   

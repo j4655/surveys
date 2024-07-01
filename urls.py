@@ -20,10 +20,11 @@ from . import views
 
 urlpatterns = [
     path('', views.selectSurvey, name="select"),
+    path('<int:id>/language/', views.getLang, name="get_lang"),
     path('<int:id>/', views.getKey, name="get_key"),
     path('<int:id>/respond/', views.surveyResponse, name="respond"),
     path('submit/', views.submitResponse, name="submit"),
     path('create/', views.createSurvey, name="create"),
     path('login/', views.survey_login, name='survey_login'),
-    path('logout/', views.survey_logout, name='survey_logout'),
+    path('logout/', views.survey_logout, name='survey_logout')
 ]
